@@ -1,0 +1,40 @@
+services:
+  receiver:
+    build: ./container1
+    container_name: hill_receiver
+    networks:
+      - hill_network
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./shared:/shared
+    
+  sender:
+    build: ./container2
+    container_name: hill_sender
+    networks:
+      - hill_network
+    depends_on:
+      - receiver
+    volumes:
+      - ./shared:/shared
+  
+  sniffer:
+    build: ./container3
+    container_name: hill_sniffer
+    networks:
+      - hill_network
+    depends_on:
+      - receiver
+      - sender
+    volumes:
+      - ./shared:/shared
+    privileged: true  # ← Isso substitui o setcap
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SYS_ADMIN
+
+networks:
+  hill_network:
+    driver: bridge
